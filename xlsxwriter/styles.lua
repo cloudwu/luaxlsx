@@ -281,6 +281,10 @@ function Styles:_write_font(format, is_dxf_format)
   local theme = format.theme
   local index = format.color_indexed
   local color = format.font_color
+  if type(color) == "table" then
+		theme = theme or color.theme
+		index = index or color.indexed
+  end
 
   if theme then
     self:_write_color("theme", theme)
@@ -421,11 +425,19 @@ function Styles:_write_fill(format, is_dxf_format)
   end
 
   if fg_color then
-    self:_xml_empty_tag("fgColor", {{["rgb"] = fg_color}})
+    if type(fg_color) == "table" then
+      self:_xml_empty_tag("fgColor", {fg_color})
+	else
+      self:_xml_empty_tag("fgColor", {{["rgb"] = fg_color}})
+	end
   end
 
   if bg_color then
-    self:_xml_empty_tag("bgColor", {{["rgb"] = bg_color}})
+    if type(bg_color) == "table" then
+	    self:_xml_empty_tag("bgColor", {bg_color})
+	else
+	    self:_xml_empty_tag("bgColor", {{["rgb"] = bg_color}})
+	end
   else
     if not is_dxf_format then
       self:_xml_empty_tag("bgColor", {{["indexed"] = "64"}})

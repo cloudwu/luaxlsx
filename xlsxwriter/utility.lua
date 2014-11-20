@@ -184,6 +184,9 @@ end
 -- color. Used in conjunction with various xxx_color() methods.
 --
 function Utility.excel_color(color)
+	if type(color) == "table" then
+		return color
+	end
   local rgb = color
 
   -- Convert named colours.

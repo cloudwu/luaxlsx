@@ -116,7 +116,7 @@ end
 --
 function Packager:_create_package()
 
-  self.zip = ZipWriter.zip(self.filename)
+  self.zip = assert(ZipWriter.zip(self.filename), "Can't open " .. self.filename)
 
   self:_write_worksheet_files()
   self:_write_chartsheet_files()
