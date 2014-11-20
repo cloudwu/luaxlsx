@@ -644,7 +644,18 @@ function Styles:_write_xf(format)
   end
 
   -- Check if XF format has alignment properties set.
-  local apply_align, align = format:_get_align_properties()
+  local apply_align, align
+
+  if format.align_array then
+	  apply_align = true
+	  align = {}
+	  for k,v in pairs(format.align_array) do
+		table.insert(align, { [k] = v })
+	  end
+  else
+	  apply_align, align = format:_get_align_properties()
+  end
+
 
   -- Check if an alignment sub-element should be written.
   if apply_align and align then

@@ -1,6 +1,6 @@
 local zip = require "zip"
 local xml = require "xlsxreader.xml"
-local print_r = require "print_r"
+local print_r = require "xlsxreader.print_r"
 
 local M = {}
 
@@ -222,6 +222,8 @@ function M.load(filename)
 			load_sheet(self, v)
 		end
 	end
+
+	self.archive:close()
 
 	return sheets, self.styles
 end

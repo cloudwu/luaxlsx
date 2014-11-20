@@ -29,6 +29,7 @@ local rd = require "xlsxreader.workbook"
 local wt = require "xlsxwriter.workbook"
 local xml = require "xlsxreader.xml"
 local util = require "xlsxwriter.Utility"
+local base64 = require "base64"
 
 -------------- xlsx to hfs --------------------
 
@@ -233,10 +234,7 @@ end
 local function new_format(fm, t)
 	local alignment = t.alignment
 	if alignment then
-		if alignment.wrapText == 1 then
-			fm:set_text_wrap()
-		end
-		-- todo: other alignment, vertical etc.
+		fm:set_align_array(alignment)
 	end
 	local fill = t.fill
 	if fill then
@@ -371,5 +369,80 @@ function MODE.h2x(f1,f2)
 	h2x(f1,f2)
 end
 
-local f = assert(MODE[mode], "Invalid mode")
-f(f1,f2)
+--------------------------------------------------
+
+local TMP_PATH = os.getenv "hfs_tmp" or ""
+
+local function log(...)
+	print(os.date(), ...)
+end
+
+local function monitor(name)
+	local winapi = require "winapi"
+	local ti = winapi.LastWriteTime(name)
+	coroutine.yield(ti)
+	while true do
+		winapi.Sleep(3000)	-- sleep 3 s
+		local f = io.open(name, "r+")
+		if f then
+			f:close()
+			return
+		end
+
+		local newt = winapi.LastWriteTime(name)
+		if newt ~= ti then
+			ti = newt
+			coroutine.yield(true)
+		end
+	end
+end
+
+function MODE.monitor(filename)
+	local winapi = require "winapi"
+	assert(filename, "Need an hfs filename")
+	local fullpath, name_noext, ext = filename:match("(.*)\\(.*%.)(%w+)$")
+	assert(ext:lower() == "hfs", "Only support .hfs file")
+	local tmpdir = base64.hex(base64.hashkey(filename))
+	tmpdir = TMP_PATH .. tmpdir
+	log("Create Dir", tmpdir)
+	winapi.CreateDirectory(tmpdir)
+	local tmpname = tmpdir .. "\\" .. name_noext .. "xlsx"
+	log(string.format("Convert %s to %s", filename, tmpname))
+	h2x(filename, tmpname)
+	assert(winapi.ShellExecute(tmpname), "open " .. tmpname .. " Failed")
+	local mo = coroutine.wrap(monitor)
+	local ft = mo(tmpname)
+	while mo() do
+		log(string.format("Convert back %s to %s", tmpname, filename))
+		x2h(tmpname, filename)
+	end
+	if winapi.LastWriteTime(tmpname) ~= ft then
+		log(string.format("Convert back %s to %s", tmpname, filename))
+		x2h(tmpname, filename)
+	end
+	log("Remove ", tmpname)
+	assert(winapi.DeleteFile(tmpname), "Remove " .. tmpname .. "failed")
+	log("Remove Dir", tmpdir)
+	assert(winapi.RemoveDirectory(tmpdir), "Remove tmp dir failed")
+end
+
+local function alert(err)
+	local ok, winapi = pcall(require, "winapi")
+	if ok then
+		winapi.MessageBox(err)
+	else
+		print(err)
+	end
+end
+
+local function main(mode, f1, f2)
+	assert(type(f1) == "string")
+	local f = assert(MODE[mode], "Invalid mode")
+	f(f1,f2)
+end
+
+local ok, err = pcall(main, ...)
+if not ok then
+	alert(err)
+end
+

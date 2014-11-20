@@ -238,6 +238,12 @@ function Format:set_align(location)
 
 end
 
+-- set array align
+
+function Format:set_align_array(align_array)
+	self.align_array = align_array
+end
+
 ----
 -- Set the center_across property.
 --
