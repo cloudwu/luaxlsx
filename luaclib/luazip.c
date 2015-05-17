@@ -57,7 +57,7 @@ static int
 lreadunzip(lua_State *L) {
 	unzFile f = get_unzip(L);
 	const char * filename = luaL_checkstring(L, 2);
-	if (unzLocateFile(f, filename, 0) != UNZ_OK) {
+	if (unzLocateFile(f, filename, 2) != UNZ_OK) {
 		return luaL_error(L, "Can't find %s", filename);
 	}
 	unz_file_info64 info;
