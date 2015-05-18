@@ -218,7 +218,7 @@ function M.load(filename)
 				end
 			end
 		end
-		for _,v in ipairs(sheets) do
+		for _,v in pairs(sheets) do
 			load_sheet(self, v)
 		end
 	end

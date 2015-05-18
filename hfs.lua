@@ -116,7 +116,7 @@ local function x2h(xlsxname, hfsname)
 	local sheets, styles = rd.load(xlsxname)
 	local f = assert(io.open(hfsname, "wb"))
 	f:write "MFS2\n"
-	for _,v in ipairs(sheets) do
+	for _,v in pairs(sheets) do
 		-- header
 		f:write(string.format("[!sheet]\nname:%s\n[data]\n", v.name))
 		-- data
